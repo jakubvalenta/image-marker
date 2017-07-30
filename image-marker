@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+
+import image_marker.image_marker
+if __name__ == '__main__':
+    image_marker.image_marker.cli()
