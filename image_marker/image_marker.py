@@ -136,6 +136,13 @@ class ImageMarker(Window):
     def load_background(self):
         self.gl_image = pyglet.image.load(self.current_image)
         self.gl_sprite = pyglet.sprite.Sprite(img=self.gl_image)
+        if self.verbose:
+            msg = 'loaded {idx}/{length}: {path}'.format(
+                idx=self.cursor + 1,
+                length=len(self.images),
+                path=self.current_image
+            )
+            print(msg, file=sys.stderr)
 
     def load_objects(self):
         selection = Selection(box_ratio=self.box_ratio,
@@ -155,13 +162,17 @@ class ImageMarker(Window):
         self.scale()
         self.load_objects()
 
-        if self.verbose:
-            msg = 'loaded {idx}/{length}: {path}'.format(
-                idx=self.cursor + 1,
-                length=len(self.images),
-                path=self.current_image
+    def save_image(self):
+        selection = self.objects[0]
+        if selection and selection.w and selection.h:
+            current_mark = Mark(
+                rect=selection.to_px(self),
+                box=selection.to_box_px(self)
             )
-            print(msg, file=sys.stderr)
+        else:
+            current_mark = None
+        self.marks[self.current_image] = current_mark
+        self.callback(self.current_image, current_mark)
 
     def scale(self):
         ratio, position_x, position_y = fit(
@@ -192,14 +203,7 @@ class ImageMarker(Window):
             obj.on_mouse_drag(*args, **kwargs)
 
     def on_key_press(self, symbol, modifiers):
-        selection = self.objects[0]
-        if selection and selection.w and selection.h:
-            self.current_mark = Mark(
-                rect=selection.to_px(self),
-                box=selection.to_box_px(self)
-            )
-            self.marks[self.current_image] = self.current_mark
-            self.callback(self.current_image, self.current_mark)
+        self.save_image()
         if symbol in (key.ENTER, key.SPACE, key.RIGHT, key.DOWN):
             self.load_image(1)
         elif symbol in (key.LEFT, key.UP):
