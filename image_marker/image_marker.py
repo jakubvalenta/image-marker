@@ -13,7 +13,7 @@ from image_marker.rect import Rectangle
 
 @attr.s
 class Mark():
-    rect = attr.ib()
+    rect = attr.ib(default=None)
     box = attr.ib(default=None)
     note = attr.ib(default='')
 
@@ -147,7 +147,7 @@ class ImageMarker(Window):
     def load_objects(self):
         selection = Selection(box_ratio=self.box_ratio,
                               box_pad_perc_w=self.box_pad_perc_w)
-        if self.current_mark:
+        if self.current_mark.rect:
             selection.from_px(self.current_mark.rect, self)
         self.objects = [selection]
 
@@ -156,7 +156,7 @@ class ImageMarker(Window):
         if self.cursor >= len(self.images):
             self.cursor = 0
         self.current_image = self.images[self.cursor]
-        self.current_mark = self.marks.get(self.current_image)
+        self.current_mark = self.marks.get(self.current_image, Mark())
 
         self.load_background()
         self.scale()
@@ -165,14 +165,10 @@ class ImageMarker(Window):
     def save_image(self):
         selection = self.objects[0]
         if selection and selection.w and selection.h:
-            current_mark = Mark(
-                rect=selection.to_px(self),
-                box=selection.to_box_px(self)
-            )
-        else:
-            current_mark = None
-        self.marks[self.current_image] = current_mark
-        self.callback(self.current_image, current_mark)
+            self.current_mark.rect = selection.to_px(self)
+            self.current_mark.box = selection.to_box_px(self)
+        self.marks[self.current_image] = self.current_mark
+        self.callback(self.current_image, self.current_mark)
 
     def scale(self):
         ratio, position_x, position_y = fit(
@@ -187,10 +183,16 @@ class ImageMarker(Window):
     def draw_background(self):
         self.gl_sprite.draw()
 
+    def draw_text(self):
+        if not self.current_mark.note:
+            return
+        gl.draw_text(self.current_mark.note, x=20, y=20)
+
     def on_draw(self):
         self.clear()
         self.scale()
         self.draw_background()
+        self.draw_text()
         for obj in self.objects:
             obj.draw(self)
 
@@ -203,13 +205,19 @@ class ImageMarker(Window):
             obj.on_mouse_drag(*args, **kwargs)
 
     def on_key_press(self, symbol, modifiers):
-        self.save_image()
-        if symbol in (key.ENTER, key.SPACE, key.RIGHT, key.DOWN):
+        if symbol in (key.ENTER, key.RIGHT, key.DOWN):
+            self.save_image()
             self.load_image(1)
         elif symbol in (key.LEFT, key.UP):
+            self.save_image()
             self.load_image(-1)
         elif symbol in (key.ESCAPE, key.Q):
+            self.save_image()
             self.close()
+        elif symbol == key.BACKSPACE:
+            self.current_mark.note = self.current_mark.note[:-1]
+        elif symbol >= ord(' '):
+            self.current_mark.note += chr(symbol)
 
     def on_resize(self, width, height):
         super().on_resize(width, height)

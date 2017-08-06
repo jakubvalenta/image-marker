@@ -9,6 +9,7 @@ TColor = Tuple[int, int, int, int]
 
 COLOR_RED = (255, 0, 0, 255)
 COLOR_GREEN = (0, 255, 0, 255)
+COLOR_BLUE = (0, 0, 255, 255)
 
 
 def draw_rect(rect: Rectangle, color: TColor=COLOR_RED):
@@ -19,3 +20,18 @@ def draw_rect(rect: Rectangle, color: TColor=COLOR_RED):
         ('c4B', color * 4)
     )
     vertex_list.draw(pyglet.gl.GL_LINE_LOOP)
+
+
+def draw_text(s: str,
+              font_name: str='sans-serif',
+              font_size: int=24,
+              color: TColor=COLOR_BLUE,
+              **kwargs):
+    label = pyglet.text.Label(
+        s,
+        color=color,
+        font_name=font_name,
+        font_size=font_size,
+        **kwargs
+    )
+    label.draw()

@@ -38,8 +38,8 @@ def write_marks(marks: Iterable[TMarks],
         f = path_or_file
     writer = csv.writer(f, delimiter=' ')
     for path, mark in marks.items():
-        if mark:
-            rect = getattr(mark, rect_prop)
+        rect = getattr(mark, rect_prop)
+        if rect:
             writer.writerow([path] + list(rect.to_strings()) + [mark.note])
     if isinstance(path_or_file, str):
         f.close()
