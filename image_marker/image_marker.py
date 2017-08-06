@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import attr
+import csv
 import os
 import sys
 
@@ -114,7 +115,7 @@ class ImageMarker(pyglet.window.Window):
             self.current_image_idx = 0
         self.current_mark = self.marks.get(self.current_image)
         self.reload_rect()
-        self.gl_image = pyglet.resource.image(self.current_image)
+        self.gl_image = pyglet.image.load(self.current_image)
         self.gl_sprite = pyglet.sprite.Sprite(img=self.gl_image)
         msg = 'loaded {idx}/{length}: {path}'.format(
             idx=self.current_image_idx + 1,
@@ -192,8 +193,8 @@ class ImageMarker(pyglet.window.Window):
             self.gl_rect.w += dx
             self.gl_rect.h += dy
 
-    def on_mouse_release(self, x, y, button, modifiers):
-        if button == mouse.LEFT:
+    def done(self):
+        if self.gl_rect and self.gl_rect.w and self.gl_rect.h:
             self.current_mark = self.rect_to_mark(self.gl_rect)
             if self.gl_box:
                 box = self.rect_to_mark(self.gl_box)
@@ -203,6 +204,7 @@ class ImageMarker(pyglet.window.Window):
             self.callback(self.current_image, self.current_mark, box)
 
     def on_key_press(self, symbol, modifiers):
+        self.done()
         if symbol in (key.ENTER, key.SPACE, key.RIGHT, key.DOWN):
             self.load_image(1)
         elif symbol in (key.LEFT, key.UP):
@@ -224,19 +226,23 @@ def read_marks(marks_path: TPath) -> Iterator[TMarks]:
     out = {}
     if marks_path:
         with open(marks_path) as f:
-            for line in f:
-                path, x, y, w, h = line.strip().split(' ')
+            reader = csv.reader(f, delimiter=' ')
+            for line in reader:
+                path, x, y, w, h = line
                 coords_int = map(int, (x, y, w, h))
                 out[path] = Rectangle(*coords_int)
     return out
 
 
+def format_line(path, mark):
+    coords_str = map(str, (mark.x, mark.y, mark.w, mark.h))
+    return ' '.join(['"{}"'.format(path), *coords_str])
+
+
 def write_marks(marks: Iterable[TMarks], path: TPath):
     with open(path, 'w') as f:
         for path, mark in marks.items():
-            coords_str = map(str, (mark.x, mark.y, mark.w, mark.h))
-            line = ' '.join([path, *coords_str])
-            f.write(line + '\n')
+            f.write(format_line(path, mark) + '\n')
 
 
 @click.command()
@@ -254,7 +260,9 @@ def cli(images_dir, output_path, marks_path, box_ratio, box_pad_perc_w):
     def callback(path, mark, box):
         out[path] = mark
         write_marks(out, output_path)
-        print(path, box.x, box.y, box.w, box.h)
+        line = format_line(path, box)
+        print(line, file=sys.stderr)
+        print(line)
 
     ImageMarker(paths,
                 marks,
