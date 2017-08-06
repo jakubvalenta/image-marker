@@ -5,16 +5,18 @@ import os
 import click
 import sys
 
-from typing import IO, Iterable, Iterator, List, Union
+from typing import IO, Iterable, Iterator, Union
 
 from image_marker.image_marker import (
     ImageMarker, Mark, Rectangle, TMarks, TPath
 )
 
 
-def read_paths(dir_path: TPath) -> List[TPath]:
-    return [os.path.join(dir_path, x)
-            for x in sorted(os.listdir(dir_path))]
+def read_paths(dir_path: TPath) -> Iterator[TPath]:
+    with os.scandir(dir_path) as it:
+        for entry in it:
+            if entry.is_file():
+                yield os.path.join(dir_path, entry.name)
 
 
 def read_marks(path: TPath) -> Iterator[TMarks]:
@@ -60,7 +62,7 @@ def cli(images_dir: str,
         box_pad_perc_w: float,
         stdout: bool,
         verbose: bool):
-    paths = read_paths(images_dir)
+    paths = list(sorted(read_paths(images_dir)))
     marks = read_marks(marks_path)
     if output_path:
         out = {}
