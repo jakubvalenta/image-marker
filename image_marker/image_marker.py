@@ -216,8 +216,10 @@ class ImageMarker(Window):
             self.close()
         elif symbol == key.BACKSPACE:
             self.current_mark.note = self.current_mark.note[:-1]
-        elif symbol >= ord(' '):
-            self.current_mark.note += chr(symbol)
+
+    def on_text(self, text):
+        if text >= ' ':
+            self.current_mark.note += text
 
     def on_resize(self, width, height):
         super().on_resize(width, height)
