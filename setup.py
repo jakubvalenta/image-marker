@@ -40,7 +40,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'image-marker=image_marker.image_marker:cli',
+            'image-marker=image_marker.cli:cli',
         ],
     },
 )
