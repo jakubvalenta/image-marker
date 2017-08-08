@@ -211,7 +211,7 @@ class ImageMarker(Window):
         elif symbol in (key.LEFT, key.UP):
             self.save_image()
             self.load_image(-1)
-        elif symbol in (key.ESCAPE, key.Q):
+        elif symbol == key.ESCAPE:
             self.save_image()
             self.close()
         elif symbol == key.BACKSPACE:
