@@ -105,14 +105,14 @@ class ImageMarker(Window):
         return (rect.copy()
                 .normalize()
                 .shift(-position_x, -position_y)
-                .from_top(self.height)
+                .from_top(self.gl_sprite.height)
                 .scale(1 / self.gl_sprite.scale))
 
     def rect_rel_to_window(self, rect: Rectangle) -> Rectangle:
         position_x, position_y = self.gl_sprite.position
         return (rect.copy()
                 .scale(self.gl_sprite.scale)
-                .from_bottom(self.height)
+                .from_bottom(self.gl_sprite.height)
                 .shift(position_x, position_y))
 
     def rect_to_box(self,
