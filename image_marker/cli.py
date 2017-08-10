@@ -49,28 +49,31 @@ def write_marks(marks: Iterable[TMarks],
 
 @click.command()
 @click.argument('images_dir')
+@click.option('--marks-in', '-mi', 'marks_in_path')
+@click.option('--marks-out', '-mo', 'marks_out_path')
 @click.option('--output', '-o', 'output_path')
-@click.option('--marks', '-m', 'marks_path')
 @click.option('--box-ratio', '-br', type=float, default=0)
 @click.option('--box-pad-perc-w', '-bp', type=float, default=0.2)
 @click.option('--stdout', '-s', is_flag=True)
 @click.option('--verbose', '-v', is_flag=True)
 def cli(images_dir: str,
+        marks_in_path: str,
+        marks_out_path: str,
         output_path: str,
-        marks_path: str,
         box_ratio: float,
         box_pad_perc_w: float,
         stdout: bool,
         verbose: bool):
     paths = list(sorted(read_paths(images_dir)))
-    marks = read_marks(marks_path)
-    if output_path:
-        out = {}
+    marks = read_marks(marks_in_path)
+    out = {}
 
     def callback(path, mark):
+        out.update({path: mark})
+        if marks_out_path:
+            write_marks(out, marks_out_path, 'rect')
         if output_path:
-            out.update({path: mark})
-            write_marks(out, output_path, 'rect')
+            write_marks(out, output_path, 'box')
         if stdout:
             write_marks({path: mark}, sys.stdout, 'box')
         if verbose:
