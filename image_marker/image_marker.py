@@ -167,6 +167,8 @@ class ImageMarker(Window):
         if selection and selection.w and selection.h:
             self.current_mark.rect = selection.to_px(self)
             self.current_mark.box = selection.to_box_px(self)
+        else:
+            self.current_mark = Mark()
         self.marks[self.current_image] = self.current_mark
         self.callback(self.current_image, self.current_mark)
 
