@@ -22,6 +22,9 @@ def read_paths(dir_path: TPath) -> Iterator[TPath]:
 def read_marks(path: TPath) -> Iterator[TMarks]:
     out = {}
     if path:
+        if not os.path.isfile(path):
+            print('Input marks file doesn\'t exist.')
+            return out
         with open(path) as f:
             reader = csv.reader(f, delimiter=' ')
             for line in reader:
