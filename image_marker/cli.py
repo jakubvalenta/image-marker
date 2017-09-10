@@ -52,33 +52,35 @@ def write_marks(marks: Iterable[TMarks],
 
 @click.command()
 @click.argument('images_dir')
-@click.option('--marks-in', '-mi', 'marks_in_path')
-@click.option('--marks-out', '-mo', 'marks_out_path')
-@click.option('--output', '-o', 'output_path')
+@click.option('--marks', '-m', 'marks_path',
+              help='Marks CSV file path, will be used to load existing marks '
+              'as well as to write new marks.',
+              default='-')
+@click.option('--output', '-o', 'output_path',
+              help='Output CSV file path, contains final ',
+              default='-')
 @click.option('--box-ratio', '-br', type=float, default=0)
-@click.option('--box-pad-perc-w', '-bp', type=float, default=0.2)
-@click.option('--stdout', '-s', is_flag=True)
+@click.option('--box-pad-perc-w', '-bp', type=float, default=0)
 @click.option('--verbose', '-v', is_flag=True)
 def cli(images_dir: str,
-        marks_in_path: str,
-        marks_out_path: str,
+        marks_path: str,
         output_path: str,
         box_ratio: float,
         box_pad_perc_w: float,
         stdout: bool,
         verbose: bool):
     paths = list(sorted(read_paths(images_dir)))
-    marks = read_marks(marks_in_path)
+    marks = read_marks(marks_path)
     out = {}
 
     def callback(path, mark):
         out.update({path: mark})
-        if marks_out_path:
-            write_marks(out, marks_out_path, 'rect')
-        if output_path:
-            write_marks(out, output_path, 'box')
-        if stdout:
+        if marks_path:
+            write_marks(out, marks_path, 'rect')
+        if output_path == '-':
             write_marks({path: mark}, sys.stdout, 'box')
+        else:
+            write_marks(out, output_path, 'box')
         if verbose:
             write_marks({path: mark}, sys.stderr, 'box')
 
