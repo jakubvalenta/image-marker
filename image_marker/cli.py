@@ -53,11 +53,14 @@ def write_marks(marks: Iterable[TMarks],
 @click.command()
 @click.argument('images_dir')
 @click.option('--marks', '-m', 'marks_path',
-              help='Marks CSV file path, will be used to load existing marks '
-              'as well as to write new marks.',
+              help='Marks CSV file path. It will be used to load existing '
+              'marks as well as to write new marks. Defaults to "-", which '
+              'means stdout.',
               default='-')
 @click.option('--output', '-o', 'output_path',
-              help='Output CSV file path, contains final ',
+              help='Output CSV file path. It will contain the boxes if '
+              '--box-ratio is passed, otherwise it will be the same as '
+              '--marks. Defaults to "-", which means stdout.',
               default='-')
 @click.option('--box-ratio', '-br', type=float, default=0)
 @click.option('--box-pad-perc-w', '-bp', type=float, default=0)
