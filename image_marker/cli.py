@@ -70,7 +70,6 @@ def cli(images_dir: str,
         output_path: str,
         box_ratio: float,
         box_pad_perc_w: float,
-        stdout: bool,
         verbose: bool):
     paths = list(sorted(read_paths(images_dir)))
     marks = read_marks(marks_path)
