@@ -4,7 +4,6 @@ from image_marker.rect import Rectangle
 
 
 class TestRect(unittest.TestCase):
-
     def test_shift(self):
         rect = Rectangle(10, 20, 80, 50)
         rect.shift(-10, -20)
