@@ -2,14 +2,12 @@
 
 import csv
 import os
-import click
 import sys
+from typing import IO, Iterator, Union
 
-from typing import IO, Iterable, Iterator, Union
+import click
 
-from image_marker.image_marker import (
-    ImageMarker, Mark, Rectangle, TMarks, TPath
-)
+from image_marker.app import App, Mark, Rectangle, TMarks, TPath
 
 
 def read_paths(dir_path: TPath) -> Iterator[TPath]:
@@ -19,8 +17,8 @@ def read_paths(dir_path: TPath) -> Iterator[TPath]:
                 yield os.path.join(dir_path, entry.name)
 
 
-def read_marks(path: TPath) -> Iterator[TMarks]:
-    out = {}
+def read_marks(path: TPath) -> TMarks:
+    out: TMarks = {}
     if path:
         if not os.path.isfile(path):
             print('Input marks file doesn\'t exist.')
@@ -34,11 +32,9 @@ def read_marks(path: TPath) -> Iterator[TMarks]:
     return out
 
 
-def write_marks(marks: Iterable[TMarks],
-                path_or_file: Union[IO, TPath],
-                rect_prop: str):
+def write_marks(marks: TMarks, path_or_file: Union[IO, TPath], rect_prop: str):
     if isinstance(path_or_file, str):
-        f = open(path_or_file, 'w')
+        f: IO = open(path_or_file, 'w')
     else:
         f = path_or_file
     writer = csv.writer(f, delimiter=' ')
@@ -52,30 +48,40 @@ def write_marks(marks: Iterable[TMarks],
 
 @click.command()
 @click.argument('images_dir')
-@click.option('--marks', '-m', 'marks_path',
-              help='Marks CSV file path. It will be used to load existing '
-              'marks as well as to write new marks. Defaults to "-", which '
-              'means stdout.',
-              default='-')
-@click.option('--output', '-o', 'output_path',
-              help='Output CSV file path. It will contain the boxes if '
-              '--box-ratio is passed, otherwise it will be the same as '
-              '--marks. Defaults to "-", which means stdout.',
-              default='-')
+@click.option(
+    '--marks',
+    '-m',
+    'marks_path',
+    help='Marks CSV file path. It will be used to load existing '
+    'marks as well as to write new marks. Defaults to "-", which '
+    'means stdout.',
+    default='-',
+)
+@click.option(
+    '--output',
+    '-o',
+    'output_path',
+    help='Output CSV file path. It will contain the boxes if '
+    '--box-ratio is passed, otherwise it will be the same as '
+    '--marks. Defaults to "-", which means stdout.',
+    default='-',
+)
 @click.option('--box-ratio', '-br', type=float, default=0)
 @click.option('--box-pad-perc-w', '-bp', type=float, default=0)
 @click.option('--verbose', '-v', is_flag=True)
-def cli(images_dir: str,
-        marks_path: str,
-        output_path: str,
-        box_ratio: float,
-        box_pad_perc_w: float,
-        verbose: bool):
+def cli(
+    images_dir: str,
+    marks_path: str,
+    output_path: str,
+    box_ratio: float,
+    box_pad_perc_w: float,
+    verbose: bool,
+):
     paths = list(sorted(read_paths(images_dir)))
     marks = read_marks(marks_path)
     out = {}
 
-    def callback(path, mark):
+    def callback(path: str, mark: Mark):
         out.update({path: mark})
         if marks_path:
             write_marks(out, marks_path, 'rect')
@@ -86,16 +92,16 @@ def cli(images_dir: str,
         if verbose:
             write_marks({path: mark}, sys.stderr, 'box')
 
-    image_marker = ImageMarker(
+    app = App(
         paths,
         marks,
         callback,
         box_ratio,
         box_pad_perc_w,
         verbose,
-        resizable=True
+        resizable=True,
     )
-    image_marker.run()
+    app.run()
 
 
 if __name__ == '__main__':

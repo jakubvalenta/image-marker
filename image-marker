@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
 import image_marker.cli
+
 if __name__ == '__main__':
     image_marker.cli.cli()

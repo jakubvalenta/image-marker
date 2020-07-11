@@ -1,31 +1,30 @@
-import attr
 import sys
+from dataclasses import dataclass
+from typing import Callable, Dict, Optional, Sequence
 
 import pyglet
-from pyglet.window import key, mouse, Window
-
-from typing import Callable, Dict, List
+from pyglet.window import Window, key, mouse
 
 from image_marker import gl
-from image_marker.utils import fit
 from image_marker.rect import Rectangle
+from image_marker.utils import fit
 
 
-@attr.s
-class Mark():
-    rect = attr.ib(default=None)
-    box = attr.ib(default=None)
-    note = attr.ib(default='')
+@dataclass
+class Mark:
+    rect: Optional[Rectangle] = None
+    box: Optional[Rectangle] = None
+    note: str = ''
 
 
 TPath = str
 TMarks = Dict[TPath, Mark]
 
 
-@attr.s
+@dataclass
 class Selection(Rectangle):
-    box_ratio = attr.ib(default=0)
-    box_pad_perc_w = attr.ib(default=0)
+    box_ratio: float = 0
+    box_pad_perc_w: float = 0
 
     def to_px(self, window: Window) -> 'Selection':
         return window.rect_rel_to_image(self)
@@ -40,7 +39,8 @@ class Selection(Rectangle):
     def to_box(self, window: Window) -> 'Selection':
         if self.box_ratio:
             return window.rect_to_box(
-                self, self.box_ratio, self.box_pad_perc_w)
+                self, self.box_ratio, self.box_pad_perc_w
+            )
         return self
 
     def to_box_px(self, window: Window) -> 'Selection':
@@ -65,9 +65,9 @@ class Selection(Rectangle):
                 gl.draw_rect(self.to_box(window), gl.COLOR_GREEN)
 
 
-class ImageMarker(Window):
-    images = None
-    marks = None
+class App(Window):
+    images: Sequence = ()
+    marks: TMarks = {}
     callback = None
     box_ratio = None
     box_pad_perc_w = None
@@ -77,15 +77,17 @@ class ImageMarker(Window):
     current_image = None
     current_mark = None
 
-    def __init__(self,
-                 images: List[TPath],
-                 marks: TMarks,
-                 callback: Callable[[TPath, Rectangle, Rectangle], None],
-                 box_ratio: float,
-                 box_pad_perc_w: float,
-                 verbose: bool,
-                 *args,
-                 **kwargs):
+    def __init__(
+        self,
+        images: Sequence[TPath],
+        marks: TMarks,
+        callback: Callable[[TPath, Mark], None],
+        box_ratio: float,
+        box_pad_perc_w: float,
+        verbose: bool,
+        *args,
+        **kwargs,
+    ):
         self.images = images
         self.marks = marks
         self.callback = callback
@@ -102,36 +104,40 @@ class ImageMarker(Window):
 
     def rect_rel_to_image(self, rect: Rectangle) -> Rectangle:
         position_x, position_y = self.gl_sprite.position
-        return (rect.copy()
-                .normalize()
-                .shift(-position_x, -position_y)
-                .from_top(self.gl_sprite.height)
-                .scale(1 / self.gl_sprite.scale))
+        return (
+            rect.copy()
+            .normalize()
+            .shift(-position_x, -position_y)
+            .from_top(self.gl_sprite.height)
+            .scale(1 / self.gl_sprite.scale)
+        )
 
     def rect_rel_to_window(self, rect: Rectangle) -> Rectangle:
         position_x, position_y = self.gl_sprite.position
-        return (rect.copy()
-                .scale(self.gl_sprite.scale)
-                .from_bottom(self.gl_sprite.height)
-                .shift(position_x, position_y))
+        return (
+            rect.copy()
+            .scale(self.gl_sprite.scale)
+            .from_bottom(self.gl_sprite.height)
+            .shift(position_x, position_y)
+        )
 
-    def rect_to_box(self,
-                    rect: Rectangle,
-                    ratio: float,
-                    pad_perc_w: float=0.2) -> Rectangle:
+    def rect_to_box(
+        self, rect: Rectangle, ratio: float, pad_perc_w: float = 0.2
+    ) -> Rectangle:
         normalized = rect.copy().normalize()
         sprite_rect = Rectangle(
             self.gl_sprite.position[0],
             self.gl_sprite.position[1],
             self.gl_sprite.width,
-            self.gl_sprite.height
+            self.gl_sprite.height,
         )
-        return (normalized
-                .create_box(ratio)
-                .pad_by_perc_w(pad_perc_w)
-                .limit(sprite_rect.w, sprite_rect.h)
-                .center(normalized)
-                .move_inside(sprite_rect))
+        return (
+            normalized.create_box(ratio)
+            .pad_by_perc_w(pad_perc_w)
+            .limit(sprite_rect.w, sprite_rect.h)
+            .center(normalized)
+            .move_inside(sprite_rect)
+        )
 
     def load_background(self):
         self.gl_image = pyglet.image.load(self.current_image)
@@ -140,18 +146,19 @@ class ImageMarker(Window):
             msg = 'loaded {idx}/{length}: {path}'.format(
                 idx=self.cursor + 1,
                 length=len(self.images),
-                path=self.current_image
+                path=self.current_image,
             )
             print(msg, file=sys.stderr)
 
     def load_objects(self):
-        selection = Selection(box_ratio=self.box_ratio,
-                              box_pad_perc_w=self.box_pad_perc_w)
+        selection = Selection(
+            box_ratio=self.box_ratio, box_pad_perc_w=self.box_pad_perc_w
+        )
         if self.current_mark.rect:
             selection.from_px(self.current_mark.rect, self)
         self.objects = [selection]
 
-    def load_image(self, incr: int=0):
+    def load_image(self, incr: int = 0):
         self.cursor += incr
         if self.cursor >= len(self.images):
             self.cursor = 0
@@ -174,10 +181,7 @@ class ImageMarker(Window):
 
     def scale(self):
         ratio, position_x, position_y = fit(
-            self.gl_image.width,
-            self.gl_image.height,
-            self.width,
-            self.height
+            self.gl_image.width, self.gl_image.height, self.width, self.height
         )
         self.gl_sprite.scale = ratio
         self.gl_sprite.position = (position_x, position_y)

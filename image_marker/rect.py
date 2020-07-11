@@ -1,18 +1,17 @@
-import attr
-
+from dataclasses import dataclass
 from typing import Tuple
 
 from image_marker.utils import contain
 
 
-@attr.s
-class Rectangle():
-    x = attr.ib(default=0)
-    y = attr.ib(default=0)
-    w = attr.ib(default=0)
-    h = attr.ib(default=0)
+@dataclass
+class Rectangle:
+    x: int = 0
+    y: int = 0
+    w: int = 0
+    h: int = 0
 
-    def to_strings(self) -> Tuple[str, str, str, str]:
+    def to_strings(self) -> Tuple[str, ...]:
         return tuple(map(str, (self.x, self.y, self.w, self.h)))
 
     @classmethod
@@ -32,7 +31,7 @@ class Rectangle():
         w, h = contain(self.w, self.h, ratio)
         return Rectangle(self.x, self.y, w, h)
 
-    def shift(self, x: float, y: float) -> 'Rectangle':
+    def shift(self, x: int, y: int) -> 'Rectangle':
         self.x = self.x + x
         self.y = self.y + y
         return self
@@ -56,19 +55,21 @@ class Rectangle():
         return self
 
     def center(self, rect: 'Rectangle') -> 'Rectangle':
-        self.x = rect.x + rect.w / 2 - self.w / 2
-        self.y = rect.y + rect.h / 2 - self.h / 2
+        self.x = round(rect.x + rect.w / 2 - self.w / 2)
+        self.y = round(rect.y + rect.h / 2 - self.h / 2)
         return self
 
     def move_inside(self, container: 'Rectangle') -> 'Rectangle':
-        self.x = min(max(self.x, container.x),
-                     container.x + container.w - self.w)
-        self.y = min(max(self.y, container.y),
-                     container.y + container.h - self.h)
+        self.x = min(
+            max(self.x, container.x), container.x + container.w - self.w
+        )
+        self.y = min(
+            max(self.y, container.y), container.y + container.h - self.h
+        )
         return self
 
     def pad_by_perc_w(self, pad_perc_w: float) -> 'Rectangle':
-        pad_px = self.w * pad_perc_w * 2
+        pad_px = round(self.w * pad_perc_w * 2)
         self.w = self.w + pad_px
         self.h = self.h + pad_px
         return self
