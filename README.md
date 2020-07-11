@@ -1,126 +1,116 @@
 # Image Marker
 
-Graphical program to quickly mark rectangular areas in a batch of images and save the output as a CSV, optionally
-adding a text note to each of the marks.
+A graphical program to mark rectangular areas in a batch of images and save
+their coordinates as a CSV. Optionally, add a text note to each of the
+images. Optimized for a fast workflow.
 
-The **output CSV** file (space-separated) contains on each row an image path with the coordinates of the marked
-rectangle. Example:
+![Image Marker screenshot](./docs/image-marker-screenshot.png)
+
+Output CSV format:
+
+``` csv
+<image path> <left px> <top px> <width px> <height px>
+```
+
+Example:
 
 ``` csv
 ./test_images/building.jpg 350 237 909 547
 ./test_images/canal.jpg 530 533 1075 252
 ```
 
-The general format is:
-
-``` csv
-<image path> <left px> <top px> <width px> <height px>
-```
-
-This is all Image Marker does. It's completely up to you how to use this CSV output.
-
-- An obvious option though, is to **crop the images**. For that I've created a small script
-[image-crop](https://lab.saloun.cz/jakub/image-crop).
+This is all Image Marker does. You can do whatever you want with the output
+CSV. One obvious option is to crop the images according to the marks. You can
+use [image-crop](https://github.com/jakubvalenta/image-crop) for that.
 
 ## Installation
 
-```
+``` shell
 pip install --user --upgrade .
 ```
 
-## Help
+## Usage
 
-```
-image-marker --help
-```
+1. Put all the images you want to mark in a single directory.
 
-## Basic concepts
+2. Run Image Marker:
 
-### Browsing images
+    ``` shell
+    image-marker ./my_directory --marks my_marks.csv --output my_output.csv --box-ratio 1.33 --box-padding 0.1
+    ```
 
-Image Marker operates on a directory of images.
+    The positional argument specifies the directory to load the images from.
 
-It displays one image at a time. You can change the displayed image using your **keyboard arrow keys**.
+    The option `--marks` specifies the CSV file path, where the coordinates of
+    the marked rectangles will be saved.
 
-The images are always scaled to fit in the window of the program. There is no zoom option.
+    The option `--output` specifies the CSV file path, where the post-processed
+    coordinates will be saved. More on that later.
 
-### Adding marks
+3. A window will appear with the first image in the directory. Use the mouse to
+   draw a rectangular mark. The output CSV files are saved immediately.
 
-On each image you can select with your mouse a rectangular area. This is what we call a **mark**. The mark will appear
-on the screen as a **red rectangle**.
+    ![Image Marker screenshot - mark](./docs/image-marker-screenshot-mark.png)
 
-![](./docs/screenshot_1_mark.png)
+    If you're not happy with the mark position or size, draw it again. The
+    previously drawn rectangle will disappear.
 
-### Saving the marks
+4. Use the <kbd>right</kbd> arrow key to advance to the next image.
 
-Use the option **`--marks`** to specify a CSV file path, in which the coordinates of the marked rectangles will be saved.
+    You can also go back using the <kbd>left</kbd> arrow key.
 
-Use the option **`--output`** to specify a CSV file path, in which the post-processed coordinates will be saved.
+5. Type any characters on your keyboard to add a text note to an image. It will
+   appear in blue by the bottom edge of the window. You can delete what you've
+   typed using the <kbd>backspace</kbd> key.
 
-### Post-processing options
+    ![Image Marker screenshot - note](./docs/image-marker-screenshot-note.png)
 
-By default the values stored in the **`--marks`** and **`--output`** CSV files are the same.
+6. Quit the program by pressing the <kbd>esc</kbd> key.
 
-However, it is possible to make some automatic adjustments to your marked rectangles. There is currently one such
-scenario:
+### Mark post-processing
+
+By default the values stored in the `--marks` and `--output` CSV files are the
+same.
+
+However, it is possible to make some automatic adjustments to your marks. In
+this case, the original marks will be stored in the `--marks` CSV file and the
+post-processed marks in the `--output` CSV file.
+
+There is currently one post-processing option:
 
 #### Box
 
-If you want to automatically draw a **box** around your marked rectangles with a specific aspect ratio, use the option
-**`--box-ratio`**. This way, you can just mark the part of the image that contains the subject that you are interested
-in, but all your marks will become rectangles of the same aspect ratio, thus forming a nicely unified collection.
+If you want to create a set of marks that all have the same aspect ratio, you
+can use the option `--box-ratio` to automatically draw a box around each mark
+with a specified aspect ratio. The box will be drawn symmetrically around the
+marked area as a green rectangle. If the box doesn't fit in the image, it will
+be moved in the image.
 
-The box will be rendered symmetrically around the marked area as a **green rectangle** and always have the
-specified aspect ratio (unless it wouldn't fit in the image).
+![Image Marker screenshot - box](./docs/image-marker-screenshot-box.png)
 
-![](./docs/screenshot_2_box.png)
+You can also add padding to the box using the option `--box-padding`. It is
+defined as a fraction of the marked rectangle width. For instance `--box-padding
+0.15` will result in a 30 px padding for a 200 px wide mark.
 
-You can also specify a **box padding** with the option **`--box-padding`** to make the box a little further from the
-original marked rectangle. The padding is specified as a fraction of marked area width. Example: option
-`--box-padding 0.15` will result in a 30 px padding for a 200 px wide selection.
-
-![](./docs/screenshot_3_box_with_padding.png)
-
-## Adding notes
-
-You can add text to each image. Just start typing any characters, the text will appear in **blue** by the bottom of the
-image. You can delete what you've typed with the backspace key.
-
-![](./docs/screenshot_4_notes.png)
+![Image Marker screenshot - box with padding](./docs/image-marker-screenshot-box-with-padding.png)
 
 ## Controls
 
-- **right arrow** or **down arrow** or **enter**: show next image
-- **left arrow** or **up arrow**: show previous image
-- **left mouse click and drag**: mark a rectangular area
-- **mouse click without drag**: delete currently marked area
-- **escape**: exit the program (all marks are automatically saved)
-- **alphanumeric keys (letters and numbers)**: add text note to the current image
-- **backspace**: delete the last character of the text note
+- <kbd>right</kbd> or <kbd>down</kbd> or <kbd>enter</kbd>: show next image
+- <kbd>left</kbd> or<kbd>up</kbd>: show previous image
+- left mouse click and drag: draw a mark
+- left mouse click (no drag): delete current mark
+- <kbd>esc</kbd>: exit the program (all marks are automatically saved)
+- letter and number keys: add text note to current image
+- <kbd>backspace</kbd>: delete the last character of the text note
 
-## Example workflow
+## Help
 
-1. Put the images that you want to mark in one directory, let say `my_directory/`.
-
-2. Run image-marker:
-
-   ```
-   image-marker ./my_directory/ --marks my_marks.csv --output my_output.csv --box-ratio 1.33 --box-padding 0.1
-   ```
-
-3. A window will appear with the first image in the directory.
-
-4. Draw the first rectangle with the mouse on the image.
-
-5. If you're not happy with it, draw it again. The previously drawn rectangle will disappear.
-
-6. Press left arrow key to advance to the next image.
-
-7. You can go back to the previous image by pression the left arrow key. The rectangle that you've drawn before will
-still be there.
-
-8. The marks and output CSV are written immediately. You can quit the program any time by pressing the escape key.
+``` shell
+image-marker --help
+```
 
 ## Contributing
 
-__Feel free to remix this piece of software.__ See [NOTICE](./NOTICE) and [LICENSE](./LICENSE) for license information.
+__Feel free to remix this piece of software.__ See [NOTICE](./NOTICE) and
+[LICENSE](./LICENSE) for license information.
